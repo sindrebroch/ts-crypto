@@ -1,28 +1,54 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
+import * as React from 'react';
 import './App.css';
+import { connect } from 'react-redux';
+import Coin from './Coin';
 
-class App extends Component {
+interface AppProps {
+  loading: boolean,
+  error: any,
+  coins: Coin[],
+  dispatch: any
+}
+
+class App extends React.Component<AppProps> {
+
+  renderCryptoList = () => {
+    if(this.props.coins.length === 0) return [];
+    return this.props.coins.map( coin => {
+      return coin.renderCoin();
+    });
+  }
+
+  renderTotal = () => {
+    let total: number = 0;
+    this.props.coins.forEach( (coin) => {
+        total += (coin.amount*coin.quote.USD.price)*coin.USDtoNOK
+    })
+
+    if(total === 0) return "";
+    else return `Total: ${total.toFixed(2)} NOK`
+  }
+
   render() {
+    if(this.props.error) return <div>Error {this.props.error.message}</div>
+    if(this.props.loading) return <div>Loading...</div>
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
+          <div>
+            {this.renderTotal()}
+            {this.renderCryptoList()}
+          </div>
         </header>
       </div>
     );
   }
 }
 
-export default App;
+const mapStateToProps = (state:any) => ({
+  coins: state.coinReducer.coins,
+  loading: state.coinReducer.loading,
+  error: state.coinReducer.error
+})
+
+export default connect(mapStateToProps)(App);
